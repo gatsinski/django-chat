@@ -1,0 +1,16 @@
+*.py[co]
+*.mo
+*.log
+*.pid
+*.sock
+*.geany
+*.project
+*.anjuta
+*.sublime*
+*.directory
+*.idea
+*.sqlite
+*.sqlite3
+*.db
+*.sql.gz
+.vscode

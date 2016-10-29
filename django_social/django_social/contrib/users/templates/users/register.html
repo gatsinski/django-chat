@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <title>Welcome!</title>
+    </head>
+    <body>
+        <form action="" id="chat_form" method="post" novalidate>
+            {% csrf_token %}
+            <p>
+                {% if form.username.errors %} {{ form.username.errors }} {% endif %}
+                <label for="{{ form.username.auto_id }}">{{ form.username.label }}</label>
+                {{ form.username }}
+            </p>
+            <p>
+                {% if form.password.errors %} {{ form.password.errors }} {% endif %}
+                <label for="{{ form.password.auto_id }}">{{ form.password.label }}</label>
+                {{ form.password }}
+            </p>
+                {% if form.password_repeat.errors %} {{ form.password_repeat.errors }} {% endif %}
+                <label for="{{ form.password_repeat.auto_id }}">{{ form.password_repeat.label }}</label>
+                {{ form.password_repeat }}
+            </p>
+            <p>
+                {% if form.email.errors %} {{ form.email.errors }} {% endif %}
+                <label for="{{ form.email.auto_id }}">{{ form.email.label }}</label>
+                {{ form.email }}
+            </p>
+            <p>
+                {% if form.first_name.errors %} {{ form.first_name.errors }} {% endif %}
+                <label for="{{ form.first_name.auto_id }}">{{ form.first_name.label }}</label>
+                {{ form.first_name }}
+            </p>
+                {% if form.last_name.errors %} {{ form.last_name.errors }} {% endif %}
+                <label for="{{ form.last_name.auto_id }}">{{ form.last_name.label }}</label>
+                {{ form.last_name }}
+            </p>
+            <input value="Send" type="submit" name="submit">
+        </form>
+    </body>
+</html>

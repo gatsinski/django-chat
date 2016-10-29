@@ -1,0 +1,14 @@
+<html>
+    <head>
+        <title>Welcome!</title>
+    </head>
+    <body>
+        {% if rooms %}
+            {% for room in rooms %}
+                <li><a href="{% url 'chats:load_form' room.pk %}">{{ room.get_description }}</a></li>
+            {% endfor %}
+        {% else %}
+            <p>There are no rooms, yet! <a href="% url 'chats:load_form' 1 %}">Create one!</a></p>
+        {% endif %}
+    </body>
+</html>

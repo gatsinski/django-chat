@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <title>Welcome!</title>
+    </head>
+    <body>
+        <form action="" id="chat_form" method="post" novalidate>
+            {% csrf_token %}
+            <label for="username"> Username </label>
+            <input type="text" name="username" id="username">
+            <label for="password"> Password </label>
+            <input type="text" name="password" id="password">
+            <input value="Send" type="submit" name="submit">
+        </form>
+        <a href="{% url 'users:register' %}">Reguster</a>
+    </body>
+</html>

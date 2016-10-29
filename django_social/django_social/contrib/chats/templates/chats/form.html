@@ -1,0 +1,173 @@
+{% load static %}
+
+<html>
+    <head>
+    <link rel="stylesheet" type="text/css" href="{% static 'chats/main.css' %}">
+    </head>
+    <body>
+        <form action="" id="chat_form" method="post" novalidate>
+            <a href="#" id='older_messages'>Older messages</a>
+            <div id='message_box'>
+                {% if messages %}
+                    {% for message in messages %}
+                        {% if message.type == 'm' %}
+                            <div class='message'>{{ message.date|date:"d.m.Y G:i:s" }}: {{ message.message }}</div>
+                        {% elif message.type == 's' %}
+                            <div class='message system_message'>{{ message.date }}: {{ message.message }}</div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% csrf_token %}
+            {{ form.message }}
+            <input value="Send" type="submit" id='message' name="submit">
+        </form>
+
+	
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3/jquery.min.js"></script>
+	<script type="text/javascript">
+
+    var last_message_id = {{ last_message_id}};
+    var first_message_id = {{ first_message_id }};
+
+	$(window).ready(function(){
+		init_chat('chat_form');
+        //sync_messages(last_message_id);
+        scroll_to_bottom('#message_box');
+	})
+	
+    
+
+	function init_chat(html_el_id) {
+		//chat_room_id = chat_id;
+		layout_and_bind(html_el_id);
+	}
+	
+
+
+	function layout_and_bind(html_el_id) {
+		// event stuff
+    	$("#"+html_el_id).submit( function (e) {
+			e.preventDefault();
+            var $inputs = $(this).children('input');
+            var values = {};
+
+            $inputs.each(function(i,el) {
+            	values[el.name] = $(el).val();
+            });
+			values['chat_room_id'] = window.chat_room_id;
+        	$.ajax({
+                data: values,
+                dataType: 'text', //empty string
+                type: 'post',
+                url: "{% url 'chats:send_message' room_id %}",
+                success: function(data) {
+                    sync_messages(last_message_id);
+                    scroll_to_bottom('#message_box');
+                },
+                error: function(data) {
+                    console.log(data);
+                }
+            });
+            $('#chat_form #id_message').val('');
+            return false;
+        });
+
+        $("#older_messages").click( function (e) {
+			e.preventDefault();
+            first_message = {'first_message_id': first_message_id};
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+        	$.ajax({
+                data: first_message,
+                dataType: 'json',
+                type: 'post',
+                url: "{% url 'chats:get_previous' room_id %}",
+                success: function(data) {
+                    data.previous_messages.forEach(function(message) {
+                        if (message.type == 'm')
+                            $( "#message_box" ).prepend( "<div class=\"message\">" + message.date + ': ' + message.message + "</div>" );
+                    });
+                    if (data.first_message_id != null)
+                        first_message_id = data.first_message_id;
+                },
+                error: function(data) {
+                    console.log(data);
+                }
+            });
+            $('#chat_form #id_message').val('');
+            return false;
+        });
+    };
+
+    function sync_messages(last_message) {
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+        $.ajax({
+            data: { 'last_message_id':last_message },
+            dataType: 'json',
+            type: 'post',
+            url: "{% url 'chats:sync_messages' room_id %}",
+            success: function(data) {
+                data.new_messages.forEach(function(message) {
+                    if (message.type == 'm')
+                        $( "#message_box" ).append( "<div class=\"message\">" + message.date + ': ' + message.message + "</div>" );
+                });
+                if (data.last_message_id != null) {
+                    last_message_id = data.last_message_id;
+                }
+            },
+            error: function() {
+                console.log(data);
+            }
+        });
+        
+        setTimeout(function(){
+            sync_messages(last_message_id);
+        }, 2000)
+    };
+
+    function scroll_to_bottom(element) {
+            var element = $(element);
+            var height = element[0].scrollHeight;
+            element.animate({ scrollTop: height}, 1000);
+    }
+
+    function csrfSafeMethod(method) {
+        // these HTTP methods do not require CSRF protection
+        return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+    }
+
+    function getCookie(name) {
+        var cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    var csrftoken = getCookie('csrftoken');
+	</script>
+	
+	
+	
+	
+	</body>
+</html>
