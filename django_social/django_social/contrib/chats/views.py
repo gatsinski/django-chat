@@ -18,14 +18,13 @@ def index(request):
 def load_form(request, room_id):
     room, created = Room.objects.get_or_create(pk=room_id)
     form = ChatForm()
+    last_message_id = 0
+    first_message_id = 0
     if not created:
         messages = room.messages().order_by('-id')[:20]
         if messages:
             last_message_id = messages.first().pk
             first_message_id = messages[messages.count()-1].pk
-        else:
-            last_message_id = 0
-            first_message_id = 0
         messages = reversed(messages)
     else:
         messages = None

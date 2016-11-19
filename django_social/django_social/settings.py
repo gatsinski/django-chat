@@ -97,7 +97,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-DATE_FORMAT = ('%m.%d.%y')
+DATE_FORMAT = ('%m.%d.%Y')
 
 DATETIME_FORMAT = ('%m.%d.%Y %H:%M:%S')
 
