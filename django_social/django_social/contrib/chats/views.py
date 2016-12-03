@@ -18,14 +18,13 @@ def index(request):
 def load_form(request, room_id):
     room, created = Room.objects.get_or_create(pk=room_id)
     form = ChatForm()
+    last_message_id = 0
+    first_message_id = 0
     if not created:
         messages = room.messages().order_by('-id')[:20]
         if messages:
             last_message_id = messages.first().pk
             first_message_id = messages[messages.count()-1].pk
-        else:
-            last_message_id = 0
-            first_message_id = 0
         messages = reversed(messages)
     else:
         messages = None
@@ -39,10 +38,24 @@ def load_form(request, room_id):
 @login_required
 def send_message(request, room_id):
     if request.is_ajax():
-        message = request.POST.get('message')
-        room, created = Room.objects.get_or_create(pk=room_id)
-        room.add_message('m', request.user, message)
-    return HttpResponse('')
+        try:
+            room = Room.objects.get(pk=room_id)
+        except Room.DoesNotExist:
+            return JsonResponse({'error': 'Room does not exists'})
+
+        form = ChatForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            form.room = room
+            form.user = request.user
+            form.save()
+            return JsonResponse({'success': 'Success!'})
+        else:
+            return JsonResponse({'error': form.errors})
+    return JsonResponse({'error': 'Unknown request type'})
+            
+
+        
+    
 
 
 def sync_messages(request, room_id):

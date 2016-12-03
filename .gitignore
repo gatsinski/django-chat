@@ -14,3 +14,4 @@
 *.db
 *.sql.gz
 .vscode
+/django_social/media/*
