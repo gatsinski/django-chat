@@ -11,20 +11,21 @@
                 {% for message in messages %}
                     {% if message.type == 'm' %}
                         <div class='message'>{{ message.date|date:"d.m.Y G:i:s" }}: {{ message.message }}</div>
+                    {% elif message.type == 'f' %}
+                        <div class='message file'>{{ message.date|date:"d.m.Y G:i:s" }}: {{ message.message }}
+                            <a href="{{ message.file.url }}">{{ message.get_file_name }}</a></div>
                     {% elif message.type == 's' %}
                         <div class='message system_message'>{{ message.date }}: {{ message.message }}</div>
                     {% endif %}
                 {% endfor %}
             {% endif %}
         </div>
-        <form action="{% url 'chats:send_message' room_id %}" id="chat_form" method="post" data-room-id="{{ room_id }}" novalidate>
-            {% csrf_token %}
-            {{ form.file }}
-            {{ form.message }}
+        <form action="{% url 'chats:send_message' room_id %}" id="chat_form" method="post" enctype="multipart/form-data" data-room-id="{{ room_id }}" novalidate>
+            {{ form }}
             <input type="submit" value="Send" name="submit">
         </form>
 
-	
+
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script type="text/javascript">
 
@@ -42,32 +43,36 @@
             });
 
             //sync_messages();
-            sync_messages_cycle();
+            //sync_messages_cycle();
         });
 
         function submit_form($form) {
-            var $inputs = $form.children('input');
-            var values = {};
+            var data = new FormData($('form').get(0));
 
-            $inputs.each(function(i,element) {
-                values[element.name] = $(element).val();
-            });
-            values['chat_room_id'] = $form.data("roomId");
-
-            $.ajax({
-                data: values,
-                dataType: 'text', //empty string
-                type: $form.attr('method'),
-                url: $form.attr('action'),
-                success: function(data) {
-                    sync_messages();
-                    scroll_to_bottom('#message_box');
-                },
-                error: function(data) {
-
+            $.ajaxSetup({
+                beforeSend: function(xhr, settings) {
+                    if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
                 }
             });
-            $('#chat_form #id_message').val('');
+            $.ajax({
+                url: $form.attr('action'),
+                type: $form.attr('method'),
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function(data) {
+                    sync_messages();
+                    $('#chat_form #id_message').val('');
+                },
+                error: function(data) {
+                    alert('Error submitting');
+                }
+            });
+            
+            return false;
         }
 
 

@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -6,15 +8,18 @@ class Room(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     description = models.TextField(blank=True)
 
-    def add_message(self, type, sender, message=None):
+    def add_message(self, type, sender, message=None, file=None):
         '''Generic function for adding a message to the chat room'''
-        m = Message(room=self, type=type, author=sender, message=message)
+        m = Message(room=self, type=type, author=sender, message=message, file=file)
         m.save()
         return m
 
-    def say(self, sender, message):
+    def say(self, sender, message, file):
         '''Say something in to the chat room'''
-        return self.add_message('m', sender, message)
+        if file:
+            return self.add_message('f', sender, message, file)
+        else:
+            return self.add_message('m', sender, message)
 
     def join(self, user):
         '''A user has joined'''
@@ -55,6 +60,7 @@ class Message(models.Model):
         ('s', 'system'),
         ('a', 'action'),
         ('m', 'message'),
+        ('f', 'file'),
         ('j', 'join'),
         ('l', 'leave'),
         ('n', 'notification')
@@ -64,6 +70,7 @@ class Message(models.Model):
     type = models.CharField(max_length=1, choices=MESSAGE_TYPE_CHOICES)
     author = models.ForeignKey(User, related_name='author', blank=True, null=True)
     message = models.CharField(max_length=255, blank=True)
+    file = models.FileField(upload_to='uploads/', blank=True)
     date = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -78,3 +85,9 @@ class Message(models.Model):
         elif self.type == 'a':
             return 'ACTION: %s > %s' % (self.author, self.message)
         return self.message
+
+    def get_file_name(self):
+        if self.file:
+            return os.path.basename(self.file.name)
+        else:
+            return None

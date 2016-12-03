@@ -38,10 +38,24 @@ def load_form(request, room_id):
 @login_required
 def send_message(request, room_id):
     if request.is_ajax():
-        message = request.POST.get('message')
-        room, created = Room.objects.get_or_create(pk=room_id)
-        room.add_message('m', request.user, message)
-    return HttpResponse('')
+        try:
+            room = Room.objects.get(pk=room_id)
+        except Room.DoesNotExist:
+            return JsonResponse({'error': 'Room does not exists'})
+
+        form = ChatForm(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            form.room = room
+            form.user = request.user
+            form.save()
+            return JsonResponse({'success': 'Success!'})
+        else:
+            return JsonResponse({'error': form.errors})
+    return JsonResponse({'error': 'Unknown request type'})
+            
+
+        
+    
 
 
 def sync_messages(request, room_id):

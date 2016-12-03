@@ -106,4 +106,8 @@ DATETIME_FORMAT = ('%m.%d.%Y %H:%M:%S')
 
 STATIC_URL = '/static/'
 
+MEDIA_URL = '/media/'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
+
 LOGIN_URL = '/users/login/'
