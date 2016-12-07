@@ -10,12 +10,12 @@
             {% if messages %}
                 {% for message in messages %}
                     {% if message.type == 'm' %}
-                        <div class='message'>{{ message.date|date:"d.m.Y G:i:s" }}: {{ message.message }}</div>
+                        <div class='message'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}</div>
                     {% elif message.type == 'f' %}
-                        <div class='message file'>{{ message.date|date:"d.m.Y G:i:s" }}: {{ message.message }}
+                        <div class='message file'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}
                             <a href="{{ message.file.url }}">{{ message.get_file_name }}</a></div>
                     {% elif message.type == 's' %}
-                        <div class='message system_message'>{{ message.date }}: {{ message.message }}</div>
+                        <div class='message system_message'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}</div>
                     {% endif %}
                 {% endfor %}
             {% endif %}

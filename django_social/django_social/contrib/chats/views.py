@@ -52,10 +52,6 @@ def send_message(request, room_id):
         else:
             return JsonResponse({'error': form.errors})
     return JsonResponse({'error': 'Unknown request type'})
-            
-
-        
-    
 
 
 def sync_messages(request, room_id):
