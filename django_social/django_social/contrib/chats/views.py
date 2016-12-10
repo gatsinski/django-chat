@@ -1,11 +1,10 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render
-from django.utils.formats import date_format
+from django.utils.translation import ugettext as _
 from django.contrib.auth.decorators import login_required
 
 from .models import Room, Message
 from .forms import ChatForm
-
 
 
 @login_required
@@ -28,7 +27,7 @@ def load_form(request, room_id):
         messages = reversed(messages)
     else:
         messages = None
-    return render(request, 'chats/form.html', {'form': form,
+    return render(request, 'chats/chat.html', {'form': form,
                                                'room_id': int(room_id),
                                                'messages': messages,
                                                'last_message_id': last_message_id,
@@ -41,45 +40,57 @@ def send_message(request, room_id):
         try:
             room = Room.objects.get(pk=room_id)
         except Room.DoesNotExist:
-            return JsonResponse({'error': 'Room does not exists'})
+            return JsonResponse({'error': _('Room does not exist')})
 
         form = ChatForm(data=request.POST, files=request.FILES)
         if form.is_valid():
             form.room = room
             form.user = request.user
             form.save()
-            return JsonResponse({'success': 'Success!'})
+            return JsonResponse({'success': _('Success')})
         else:
             return JsonResponse({'error': form.errors})
-    return JsonResponse({'error': 'Unknown request type'})
+    return JsonResponse({'error': _('Unknown request type')})
 
 
-def sync_messages(request, room_id):
-    if request.is_ajax():
-        last_message_id = request.POST.get('last_message_id')
-        new_messages = Message.objects.filter(room_id=room_id, pk__gt=last_message_id)
-        last_message = new_messages.last()
-        if last_message:
-            last_message_id = last_message.pk
-        messages = [{'date': x.date.strftime('%d.%m.%Y %H:%M:%S'),
+@login_required
+def load_messages(request, room_id):
+    if request.is_ajax() and request.method == "POST":
+        try:
+            room = Room.objects.get(pk=room_id)
+        except Room.DoesNotExist:
+            return JsonResponse({'error': _('Room does not exist')}, status=500)
+
+        direction = request.POST.get('direction')
+        start_id = request.POST.get('start_id')
+        number = request.POST.get('number')
+
+        if not any([direction, start_id, number]):
+            return JsonResponse({'error': 'No POST data'}, status=500)
+
+        number = int(number)
+        if direction == 'backward':
+            list_of_messages = Message.objects.filter(room=room, pk__lt=start_id).order_by('-pk')
+        else:
+            list_of_messages = Message.objects.filter(room=room, pk__gt=start_id).order_by('pk')
+
+        if list_of_messages.count() == 0:
+            if direction == 'backward':
+                return JsonResponse({'messages': [], 'new_data': 0}, safe=False)
+            else:
+                return JsonResponse({'messages': [], 'new_data': start_id}, safe=False)
+        elif list_of_messages.count() > number:
+            list_of_messages = list_of_messages[:number]
+            new_data = list_of_messages[number-1].pk
+        else:
+            new_data = list_of_messages[list_of_messages.count()-1].pk
+
+        messages = [{'type': x.type,
                      'message': x.message,
-                     'type': x.type} for x in new_messages if x]
-    return JsonResponse({'new_messages': messages,
-                         'last_message_id': last_message_id})
+                     'author': x.author.username,
+                     'date': x.date.strftime('%d.%m.%Y %H:%M:%S'),
+                     'file_name': x.get_file_name(),
+                     'file_url': x.get_file_url()} for x in list_of_messages if x]
 
-
-def get_previous(request, room_id):
-    if request.is_ajax():
-        first_message_id = request.POST.get('first_message_id')
-        offset = 2
-        # Last 20 messages
-        previous_messages = Message.objects.filter(room_id=room_id,
-                                                   pk__lt=first_message_id).order_by('-id')[:offset]
-        if previous_messages:
-            first_message_id = previous_messages[offset-1].pk
-
-        messages = [{'date': x.date.strftime('%d.%m.%Y %H:%M:%S'),
-                     'message': x.message,
-                     'type': x.type} for x in previous_messages if x]
-    return JsonResponse({'previous_messages': messages,
-                         'first_message_id': first_message_id})
+        return JsonResponse({'messages': messages, 'new_data': new_data}, safe=False)
+    return JsonResponse({'error': _('Unknown request type')}, status=500)

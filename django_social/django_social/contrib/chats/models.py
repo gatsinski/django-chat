@@ -15,7 +15,7 @@ class Room(models.Model):
         return m
 
     def say(self, sender, message, file):
-        '''Say something in to the chat room'''
+        '''Say something into the chat room'''
         if file:
             return self.add_message('f', sender, message, file)
         else:
@@ -89,5 +89,11 @@ class Message(models.Model):
     def get_file_name(self):
         if self.file:
             return os.path.basename(self.file.name)
+        else:
+            return None
+
+    def get_file_url(self):
+        if self.file:
+            return self.file.url
         else:
             return None

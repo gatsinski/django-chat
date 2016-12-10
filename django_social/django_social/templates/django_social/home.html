@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <title>Welcome!</title>
+    </head>
+    <body>
+        <h1>Welcome to Django Social.</h1>
+        <p> Originally designed as a small university project aiming to build a chat platform 
+            Django Social will be further developed as a simple but functional social network
+            which can be used as a prototype for various larger products in the future.
+        </p>
+        <p> The list of currently active modules includes:
+            <ul>
+                <li><a href="{% url 'users:login' %}">User app</a></li>
+                <li><a href="{% url 'chats:index' %}">Chat app</a></li>
+            </ul>
+       </p>
+       <p> Planned functionalities yet to be developed:
+            <ul>
+                <li>User statuses and publications</li>
+                <li>Friends/Followers</li>
+            </ul>
+       </p>
+    </body>
+</html>

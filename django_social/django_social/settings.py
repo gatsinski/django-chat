@@ -31,14 +31,16 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = (
+    'django_social',
+    'django_social.apps.Chats',
+    'django_social.apps.Users',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_social.apps.Chats',
-    'django_social.apps.Users',
 )
 
 MIDDLEWARE_CLASSES = (

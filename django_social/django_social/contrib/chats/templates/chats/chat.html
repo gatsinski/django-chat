@@ -1,0 +1,35 @@
+{% load static %}
+
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'chats/main.css' %}">
+        <title> Chat room {{ room_id }} </title>
+    </head>
+    <body>
+        <a href="#" id='older_messages_loader'>Load older messages</a>
+        <div id='message_box' data-last-message-id="{{ last_message_id }}"
+                              data-first-message-id="{{ first_message_id }}"
+                              data-load-messages-url="{% url 'chats:load_messages' room_id %}">
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.type == 'm' %}
+                        <div class='message'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}</div>
+                    {% elif message.type == 'f' %}
+                        <div class='message file'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}
+                            <a href="{{ message.file.url }}">{{ message.get_file_name }}</a></div>
+                    {% elif message.type == 's' %}
+                        <div class='message system_message'>[{{ message.date|date:"d.m.Y G:i:s" }}] {{ message.author.username }}: {{ message.message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <form action="{% url 'chats:send_message' room_id %}" id="chat_form" method="post" enctype="multipart/form-data" data-room-id="{{ room_id }}" novalidate>
+            {% csrf_token %}
+            {{ form }}
+            <input type="submit" value="Send" name="submit">
+        </form>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        <script type="text/javascript" src="{% static 'chats/main.js' %}"></script>	
+	</body>
+</html>
